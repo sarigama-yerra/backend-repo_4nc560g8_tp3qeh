@@ -1,48 +1,82 @@
 """
-Database Schemas
+Database Schemas for Dalilah
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
+Each Pydantic model represents a MongoDB collection. The collection name
+is the lowercase of the class name.
 
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+- Opportunity -> "opportunity"
+- UserProfile -> "userprofile"
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, HttpUrl
+from typing import List, Optional, Literal
+from datetime import datetime
 
-# Example schemas (replace with your own):
+SaudiCity = Literal[
+    "Riyadh",
+    "Jeddah",
+    "Dammam",
+    "Khobar",
+    "Dhahran",
+    "Madinah",
+    "Makkah",
+    "Tabuk",
+    "Abha",
+    "Taif",
+    "Qassim",
+    "Hail",
+    "Jazan",
+    "Najran",
+    "Al Baha",
+    "Al Jouf",
+    "Al Ahsa",
+    "Other"
+]
 
-class User(BaseModel):
+OpportunityCategory = Literal[
+    "hackathon",
+    "event",
+    "course",
+    "accelerator",
+    "incubator",
+    "program"
+]
+
+OpportunityMode = Literal["online", "offline", "hybrid"]
+
+class Opportunity(BaseModel):
     """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
+    Curated professional opportunity in KSA
+    Collection: "opportunity"
     """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    title: str = Field(..., description="Opportunity title")
+    description: str = Field(..., description="Short description")
+    category: OpportunityCategory = Field(..., description="Type of opportunity")
+    organization: Optional[str] = Field(None, description="Organizer/Host")
+    country: str = Field("Saudi Arabia", description="Country")
+    city: Optional[SaudiCity] = Field(None, description="City in KSA")
+    mode: OpportunityMode = Field("online", description="Delivery mode")
+    is_paid: bool = Field(False, description="Paid vs free")
+    price: Optional[float] = Field(None, ge=0, description="Price if paid")
+    url: HttpUrl = Field(..., description="Official URL to apply/learn more")
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    application_deadline: Optional[datetime] = None
+    eligibility: Optional[str] = Field(None, description="Eligibility criteria")
+    tags: List[str] = Field(default_factory=list, description="Keywords/tags")
+    verified: bool = Field(False, description="Manually verified flag")
+    status: Literal["draft", "pending_review", "published"] = Field(
+        "pending_review", description="Moderation status"
+    )
 
-class Product(BaseModel):
+class UserProfile(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    User profile captured for personalization
+    Collection: "userprofile"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    name: str
+    email: str
+    location: Optional[SaudiCity] = None
+    experience_level: Optional[Literal["student", "junior", "mid", "senior", "founder"]] = None
+    interests: List[str] = Field(default_factory=list, description="Keywords and categories of interest")
+    goals: Optional[str] = None
